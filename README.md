@@ -1,72 +1,55 @@
 # Motion Memory Core
 
-**An open, self‑hostable memory layer for any AI agent. One memory, every client.**
+**Persistent memory for AI agents — two tiers, one system.**
 
-Your AI has amnesia. Motion Memory Core (MMC) fixes it — and it does it for
-*every* tool you use, not one. Connect BoltAI, Claude Desktop, Cursor, Claude
-Code, or anything that speaks [MCP](https://modelcontextprotocol.io) to a single
-memory you own and host. Remember once; recall everywhere.
+Your AI has amnesia. Every new session starts from zero: it doesn't know you
+corrected it last week, doesn't know you're under a merge freeze, doesn't know
+you hate mocks in tests. Motion Memory Core fixes that with two complementary
+tiers you can adopt independently or together.
 
-> MMC is the deploy + gateway + transport + integration layer. The memory engine
-> is the excellent [Stash](https://github.com/alash3al/stash) project
-> (Apache‑2.0). MMC adds native Streamable HTTP, a bearer‑auth gateway,
-> one‑click deploy, and multi‑client guides — all MIT. See `NOTICE`.
+| | [**Local Memory**](local/) | [**MCP Memory Server**](server/) |
+|---|---|---|
+| Answers | "What should this agent know in *this repo*?" | "What should *I* remember, everywhere?" |
+| Storage | Markdown files, committed to the repo | Postgres, self-hosted, MIT |
+| Scope | One repository | Every client, every machine |
+| Setup | Copy templates, paste a prompt — no infra | `docker compose up`, one bearer token |
+| Works with | Claude Code, Cursor, any file-reading agent | BoltAI, Claude Desktop, Cursor, Claude Code, any [MCP](https://modelcontextprotocol.io) client — over native **Streamable HTTP** |
 
-## Why
+Read [`docs/architecture.md`](docs/architecture.md) for how the two tiers
+relate and when to use each — short version: Local Memory for what's specific
+to a codebase and worth a PR review; the MCP server for durable facts about
+*you* that should follow you into every repo and every tool.
 
-- **One memory across every client.** MCP is the common language; MMC speaks it
-  over the modern **Streamable HTTP** transport (and legacy SSE for older
-  clients), so the same memory serves all of them.
-- **You own it.** Self‑host on your own infra. Your episodes, facts, and context
-  live in *your* Postgres. One bearer token guards the door.
-- **Real memory, not a note file.** Powered by Stash's consolidation pipeline:
-  raw episodes → structured facts → relationships → confidence‑decayed beliefs.
+## Quickstart
 
-## Architecture
-
-```
-Your AI clients                         one bearer token
-  BoltAI · Claude Desktop · Cursor · Claude Code · any MCP client
-        │  MCP over Streamable HTTP  (legacy SSE also served)
-        ▼
-  Gateway  (Caddy)  — bearer auth · transparent reverse proxy
-        ▼
-  Stash engine (Go) — serves /mcp (Streamable HTTP) + /sse · MCP tools
-        ▼
-  Postgres + pgvector — episodes · facts · context (your data)
-```
-
-## Quickstart (self‑host, local)
-
+**Local Memory** — no infrastructure, start in a repo right now:
 ```bash
-git clone https://github.com/tolowa-studio/motion-memory-core.git
-cd motion-memory-core
-cp .env.example .env          # then set STASH_TOKEN (openssl rand -hex 32) + provider key
-docker compose up -d
-curl -s -X POST localhost:8080/mcp \
-  -H "Authorization: Bearer $STASH_TOKEN" \
-  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"probe","version":"0"}}}'
+cp -r local/templates .claude/projects/$(pwd | sed 's|/|-|g')/memory
+# then paste local/prompts/CLAUDE.md-snippet.md into your CLAUDE.md
 ```
+Full guide: [`local/README.md`](local/README.md).
 
-For a hosted deploy, see [`deploy/railway.md`](deploy/railway.md) (one‑click).
+**MCP Memory Server** — self-hosted, one memory for every AI client:
+```bash
+cd server && cp .env.example .env   # set STASH_TOKEN + provider key
+docker compose up -d
+```
+Full guide: [`server/README.md`](server/README.md) · Connect any client:
+[`server/CONNECTING.md`](server/CONNECTING.md) · One-click deploy:
+[`server/deploy/railway.md`](server/deploy/railway.md).
 
-## Connect your AI
+## The 4 memory types
 
-Point any MCP client at your MMC URL with the bearer token:
-
-- **Endpoint:** `https://<your-host>/mcp`  (Streamable HTTP)
-- **Auth header:** `Authorization: Bearer <STASH_TOKEN>`
-
-Per‑client, copy‑paste setup: [`docs/CONNECTING.md`](docs/CONNECTING.md).
-
-## Security
-
-- The gateway rejects any request without the exact bearer token (401).
-- Nothing here contains secrets — tokens are per‑deploy environment variables.
-- Self‑hosting means the memory data and the provider key never leave your infra.
+Both tiers share the same typed model — `user`, `feedback`, `project`,
+`reference` — so the mental model is identical whether a memory lives in a
+markdown file or a database row. Reference:
+[`docs/types-reference.md`](docs/types-reference.md) ·
+[`docs/when-to-save.md`](docs/when-to-save.md).
 
 ## License & credits
 
-- Motion Memory Core: **MIT** © 2026 Tolowa Studio (see `LICENSE`).
-- Memory engine: **Stash** (Apache‑2.0) — https://github.com/alash3al/stash (see `NOTICE`).
+- Motion Memory Core (this repo): **MIT** © 2026 Tolowa Studio (see `LICENSE`).
+- The MCP server's memory engine is **Stash** (Apache‑2.0) —
+  https://github.com/alash3al/stash — used as a dependency, not vendored.
+  See `NOTICE`. We've contributed the native Streamable HTTP transport
+  upstream: [alash3al/stash#15](https://github.com/alash3al/stash/pull/15).

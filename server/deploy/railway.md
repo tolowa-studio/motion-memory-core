@@ -23,7 +23,7 @@ MMC runs as three services in one Railway project:
    Generate a public domain for this service — that host + `/mcp` is your
    endpoint.
 4. **Connect clients** with `Authorization: Bearer <STASH_TOKEN>` — see
-   [`../docs/CONNECTING.md`](../docs/CONNECTING.md).
+   [`../CONNECTING.md`](../CONNECTING.md).
 
 ## Hardening (recommended for real use)
 
