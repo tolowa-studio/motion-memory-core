@@ -39,7 +39,7 @@ Your AI clients                         one bearer token
 ## Quickstart (self‑host, local)
 
 ```bash
-git clone https://github.com/tolowastudio/motion-memory-core.git
+git clone https://github.com/tolowa-studio/motion-memory-core.git
 cd motion-memory-core
 cp .env.example .env          # then set STASH_TOKEN (openssl rand -hex 32) + provider key
 docker compose up -d

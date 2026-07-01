@@ -1,15 +1,16 @@
 # Builds the Stash memory engine from source.
 #
 # Transitional: until the native Streamable HTTP transport lands in upstream
-# Stash, this builds from the Tolowa Studio fork that carries the patch (open
-# PR: alash3al/stash). Once merged + released, switch STASH_REPO/STASH_REF to
-# upstream, or replace this whole file with an upstream image pull.
+# Stash, this builds from the Tolowa Studio fork that carries the patch
+# (open PR: https://github.com/alash3al/stash/pull/15). Once merged + released,
+# switch STASH_REPO/STASH_REF to upstream, or replace this whole file with an
+# upstream image pull.
 #
 # Stash is Apache-2.0. Its source is NOT vendored into this MIT repository — it
 # is cloned at build time. See NOTICE.
 FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
 RUN apk add --no-cache git ca-certificates
-ARG STASH_REPO=https://github.com/tolowastudio/stash.git
+ARG STASH_REPO=https://github.com/tolowa-studio/stash.git
 ARG STASH_REF=main
 WORKDIR /src
 RUN git clone --depth 1 --branch "${STASH_REF}" "${STASH_REPO}" .
