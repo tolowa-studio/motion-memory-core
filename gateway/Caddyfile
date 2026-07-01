@@ -1,0 +1,17 @@
+# Motion Memory Core — bearer-auth gateway.
+# Transparent reverse proxy in front of the Stash engine. Every request must
+# present the exact bearer token or it's rejected with 401. flush_interval -1
+# disables response buffering so both streaming transports (Streamable HTTP and
+# legacy SSE) pass through cleanly.
+{
+	admin off
+}
+
+:{$PORT} {
+	@unauthorized not header Authorization "Bearer {$STASH_TOKEN}"
+	respond @unauthorized "Unauthorized" 401
+
+	reverse_proxy {$STASH_UPSTREAM} {
+		flush_interval -1
+	}
+}

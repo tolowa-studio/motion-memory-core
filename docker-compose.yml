@@ -1,0 +1,51 @@
+# Motion Memory Core — self-host stack.
+#   postgres  → the memory store (pgvector)
+#   stash     → the memory engine (built from source; Apache-2.0, see NOTICE)
+#   gateway   → bearer-auth reverse proxy; the only service you expose
+#
+# Only `gateway` publishes a port. Point your MCP clients at http://<host>:8080/mcp
+# with `Authorization: Bearer $STASH_TOKEN`.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: stash
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: stash
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stash"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  stash:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.stash
+    environment:
+      DATABASE_URL: postgres://stash:${POSTGRES_PASSWORD}@postgres:5432/stash?sslmode=disable
+      STASH_OPENAI_API_KEY: ${STASH_OPENAI_API_KEY}
+      STASH_OPENAI_BASE_URL: ${STASH_OPENAI_BASE_URL:-https://api.openai.com/v1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  gateway:
+    image: caddy:2
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      STASH_TOKEN: ${STASH_TOKEN}
+      STASH_UPSTREAM: stash:8080
+    volumes:
+      - ./gateway/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - stash
+    restart: unless-stopped
+
+volumes:
+  pgdata:

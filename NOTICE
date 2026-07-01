@@ -1,0 +1,27 @@
+Motion Memory Core
+Copyright (c) 2026 Tolowa Studio
+Licensed under the MIT License (see LICENSE).
+
+------------------------------------------------------------------------------
+Built on the Stash memory engine
+------------------------------------------------------------------------------
+
+Motion Memory Core is a deployment, gateway, transport, and integration layer.
+The underlying memory engine is Stash, an independent open-source project:
+
+    Stash — https://github.com/alash3al/stash
+    Copyright (c) the Stash authors
+    Licensed under the Apache License, Version 2.0
+
+This repository does NOT vendor Stash's source code. It runs Stash as a
+dependency (built from source or pulled as an image) and adds its own
+MIT-licensed components around it:
+
+  - a native Streamable HTTP transport (contributed upstream to Stash),
+  - a bearer-auth gateway,
+  - one-click / self-host deployment recipes,
+  - multi-client connection integrations and documentation.
+
+Any distribution that includes Stash's source or binaries remains subject to
+the Apache License 2.0 for those portions. See:
+https://www.apache.org/licenses/LICENSE-2.0
