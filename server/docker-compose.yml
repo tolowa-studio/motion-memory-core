@@ -34,18 +34,37 @@ services:
     restart: unless-stopped
 
   gateway:
-    image: caddy:2
+    build:
+      context: ./gateway
     ports:
       - "8080:8080"
     environment:
       PORT: "8080"
       STASH_TOKEN: ${STASH_TOKEN}
       STASH_UPSTREAM: stash:8080
-    volumes:
-      - ./gateway/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
       - stash
     restart: unless-stopped
+
+  # Optional: scheduled Postgres backup to S3-compatible storage (R2, S3, etc.).
+  # Not started by default. Set AWS_*/S3_* in .env, then:
+  #   docker compose --profile backup run --rm backup
+  # See backup/README.md for restore instructions.
+  backup:
+    build:
+      context: ./backup
+    profiles: ["backup"]
+    environment:
+      DATABASE_URL: postgres://stash:${POSTGRES_PASSWORD}@postgres:5432/stash?sslmode=disable
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-}
+      S3_PREFIX: ${S3_PREFIX:-postgres}
+      RETENTION_DAYS: ${RETENTION_DAYS:-30}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   pgdata:

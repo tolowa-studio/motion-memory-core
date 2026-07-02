@@ -5,9 +5,24 @@
 # legacy SSE) pass through cleanly.
 {
 	admin off
+	# rate_limit is a third-party directive (mholt/caddy-ratelimit) — Caddy
+	# needs an explicit order for non-standard directives in the Caddyfile.
+	order rate_limit before basicauth
 }
 
 :{$PORT} {
+	# Per-client-IP rate limit, applied before auth so it also throttles
+	# brute-force bearer-token guessing, not just legitimate traffic.
+	# 120 req / minute per IP is generous for real MCP tool-call traffic
+	# (bursty but not high-frequency) while blocking abuse/scanning.
+	rate_limit {
+		zone per_ip {
+			key    {remote_host}
+			events 120
+			window 1m
+		}
+	}
+
 	@unauthorized not header Authorization "Bearer {$STASH_TOKEN}"
 	respond @unauthorized "Unauthorized" 401
 
