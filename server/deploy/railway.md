@@ -50,5 +50,9 @@ MMC runs as four services in one Railway project:
 - ✅ **Rate limiting** — `caddy-ratelimit`, keyed by client IP, applied before
   auth so it also throttles brute-force token guessing.
 
-> A one‑click **Deploy on Railway** template button will be added here once
-> the template is published.
+## One-click deploy
+
+A "Deploy on Railway" button requires publishing a Railway Template, which is
+a dashboard-only action (no CLI/API path exists) — see
+[`create-template.md`](create-template.md) for the exact steps to publish one
+from this hardened setup.
