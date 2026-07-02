@@ -14,11 +14,21 @@ MMC runs as four services in one Railway project:
 1. **Create the project** and add a **Postgres** database (enable the `vector`
    extension).
 2. **stash service** — deploy from this repo using `deploy/Dockerfile.stash`.
-   Set variables:
-   - `DATABASE_URL` → reference the Postgres service's connection string. If
-     Railway's Postgres plugin doesn't expose `DATABASE_URL` directly on
-     itself, construct it: `postgres://<user>:<password>@<postgres-service>.railway.internal:5432/<db>?sslmode=disable`
+   Stash's config loader requires ALL of the following — there are no
+   built-in defaults (confirmed by actually booting it with a partial set):
+   - `STASH_POSTGRES_DSN` → the Postgres connection string. If Railway's
+     Postgres plugin doesn't expose a `DATABASE_URL`-style variable directly
+     on itself, construct it:
+     `postgres://<user>:<password>@<postgres-service>.railway.internal:5432/<db>?sslmode=disable`
    - `STASH_OPENAI_API_KEY`, `STASH_OPENAI_BASE_URL`
+   - `STASH_EMBEDDING_MODEL` (e.g. `openai/text-embedding-3-small`)
+   - `STASH_REASONER_MODEL` (e.g. `openrouter/free`)
+   - `STASH_VECTOR_DIM` (e.g. `1536`, must match your embedding model)
+   - `STASH_MAX_RESULT_SIZE` (e.g. `10000`)
+   - `STASH_CONTEXT_TTL` (e.g. `1h`)
+   - `STASH_HTTP_ADDR` → `:8080` (or `:$PORT`)
+   - `STASH_LOG_LEVEL` (e.g. `info`), `STASH_LOG_FORMAT` (e.g. `json`)
+
    The engine listens on one port (`$PORT`, default 8080) serving `/mcp`
    (Streamable HTTP), `/sse` + `/message` (legacy SSE), and `/healthz` (real
    DB-backed health check — not a bare process-up ping).
