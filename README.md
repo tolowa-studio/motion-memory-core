@@ -2,6 +2,8 @@
 
 **Persistent memory for AI agents — two tiers, one system.**
 
+> **Just handed this repo?** → Start with **[`START-HERE.md`](START-HERE.md)** — a two-minute, zero-decisions on-ramp.
+
 Your AI has amnesia. Every new session starts from zero: it doesn't know you
 corrected it last week, doesn't know you're under a merge freeze, doesn't know
 you hate mocks in tests. Motion Memory Core fixes that with two complementary
